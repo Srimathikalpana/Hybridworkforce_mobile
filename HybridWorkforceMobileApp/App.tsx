@@ -10,8 +10,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthBootstrap } from './src/hooks/useAuthBootstrap';
 import LoginScreen from './src/screens/LoginScreen';
-import HomeScreen from './src/screens/HomeScreen';
+import AdminNavigator from './src/navigation/AdminNavigator';
+import ManagerNavigator from './src/navigation/ManagerNavigator';
+import EmployeeNavigator from './src/navigation/EmployeeNavigator';
 import { RootStackParamList } from './src/types/navigation';
+import { UserRole } from './src/services/authService';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -24,21 +27,39 @@ function LoadingScreen() {
   );
 }
 
+function getNavigatorByRole(role: UserRole) {
+  switch (role) {
+    case 'HR_ADMIN':
+    case 'SYS_ADMIN':
+      return AdminNavigator;
+    case 'MANAGER':
+      return ManagerNavigator;
+    case 'EMPLOYEE':
+    default:
+      return EmployeeNavigator;
+  }
+}
+
 export default function App() {
-  const { status } = useAuthBootstrap();
+  const { status, user } = useAuthBootstrap();
 
   if (status === 'loading') {
     return <LoadingScreen />;
   }
 
+  if (status === 'authenticated' && user) {
+    const RoleNavigator = getNavigatorByRole(user.role);
+    return (
+      <NavigationContainer>
+        <RoleNavigator />
+      </NavigationContainer>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {status === 'authenticated' ? (
-          <Stack.Screen name="Home" component={HomeScreen} />
-        ) : (
-          <Stack.Screen name="Login" component={LoginScreen} />
-        )}
+        <Stack.Screen name="Login" component={LoginScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
