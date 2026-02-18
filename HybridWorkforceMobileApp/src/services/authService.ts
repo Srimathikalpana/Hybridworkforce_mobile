@@ -33,7 +33,7 @@ const mockLogin = async (
   password: string
 ): Promise<LoginResponse> => {
   // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(() => resolve(undefined), 500));
 
   // Accept only when username === password
   if (username !== password) {
@@ -72,7 +72,7 @@ const mockLogin = async (
 
 const mockGetCurrentUser = async (): Promise<User> => {
   // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => setTimeout(() => resolve(undefined), 200));
 
   if (!mockCurrentUser) {
     throw new Error('No authenticated user');
