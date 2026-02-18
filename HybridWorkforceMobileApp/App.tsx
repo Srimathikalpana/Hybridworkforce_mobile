@@ -8,7 +8,7 @@ import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useAuthBootstrap } from './src/hooks/useAuthBootstrap';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginScreen from './src/screens/LoginScreen';
 import AdminNavigator from './src/navigation/AdminNavigator';
 import ManagerNavigator from './src/navigation/ManagerNavigator';
@@ -40,8 +40,8 @@ function getNavigatorByRole(role: UserRole) {
   }
 }
 
-export default function App() {
-  const { status, user } = useAuthBootstrap();
+function RootNavigator() {
+  const { status, user } = useAuth();
 
   if (status === 'loading') {
     return <LoadingScreen />;
@@ -49,19 +49,23 @@ export default function App() {
 
   if (status === 'authenticated' && user) {
     const RoleNavigator = getNavigatorByRole(user.role);
-    return (
-      <NavigationContainer>
-        <RoleNavigator />
-      </NavigationContainer>
-    );
+    return <RoleNavigator />;
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+    </Stack.Navigator>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
 

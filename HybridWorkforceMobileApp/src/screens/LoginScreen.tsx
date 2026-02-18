@@ -8,14 +8,11 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
 import { login } from '../services/authService';
-import { saveToken } from '../utils/authStorage';
+import { useAuth } from '../context/AuthContext';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
-
-const LoginScreen = ({ navigation }: Props) => {
+const LoginScreen = () => {
+  const { signIn } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,8 +29,7 @@ const LoginScreen = ({ navigation }: Props) => {
 
     try {
       const response = await login(username, password);
-      await saveToken(response.token);
-      navigation.replace('Home');
+      await signIn(response);
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message || err.message || 'Login failed';
