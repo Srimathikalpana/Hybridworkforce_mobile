@@ -6,12 +6,56 @@ import {
   ActivityIndicator,
   StyleSheet,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import { useAttendance } from '../hooks/useAttendance';
 
+/**
+ * Format ISO timestamp to readable time format
+ */
+const formatTime = (isoString: string | undefined): string => {
+  if (!isoString) return '--:--';
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return '--:--';
+  }
+};
+
+/**
+ * Format coordinates for display
+ */
+const formatCoordinates = (
+  latitude: number | undefined,
+  longitude: number | undefined
+): string => {
+  if (!latitude || !longitude) return 'No location data';
+  return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+};
+
+/**
+ * Format accuracy in meters
+ */
+const formatAccuracy = (accuracy: number | undefined): string => {
+  if (!accuracy) return 'N/A';
+  return `±${Math.round(accuracy)}m`;
+};
+
 export default function AttendanceScreen() {
-  const { isCheckedIn, loading, error, handleCheckIn, handleCheckOut } =
-    useAttendance();
+  const {
+    isCheckedIn,
+    loading,
+    error,
+    attendanceData,
+    handleCheckIn,
+    handleCheckOut,
+  } = useAttendance();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const onCheckIn = async () => {
@@ -32,69 +76,119 @@ export default function AttendanceScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.content}>
-          {/* Status Icon */}
-          <View
-            style={[
-              styles.statusIcon,
-              isCheckedIn ? styles.statusCheckedIn : styles.statusCheckedOut,
-            ]}
-          >
-            <Text style={styles.statusEmoji}>{isCheckedIn ? '✓' : '○'}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <View style={styles.content}>
+            {/* Status Icon */}
+            <View
+              style={[
+                styles.statusIcon,
+                isCheckedIn
+                  ? styles.statusCheckedIn
+                  : styles.statusCheckedOut,
+              ]}
+            >
+              <Text style={styles.statusEmoji}>
+                {isCheckedIn ? '✓' : '○'}
+              </Text>
+            </View>
+
+            {/* Status Text */}
+            <Text style={styles.statusText}>
+              {isCheckedIn ? 'You are checked in' : 'You are not checked in'}
+            </Text>
+
+            {/* Attendance Details */}
+            {isCheckedIn && attendanceData && (
+              <View style={styles.detailsContainer}>
+                {/* Check-in Time */}
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Check-in Time</Text>
+                  <Text style={styles.detailValue}>
+                    {formatTime(attendanceData.checkInTime)}
+                  </Text>
+                </View>
+
+                {/* GPS Coordinates */}
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Location (GPS)</Text>
+                  <Text style={styles.detailValue}>
+                    {formatCoordinates(
+                      attendanceData.location?.latitude,
+                      attendanceData.location?.longitude
+                    )}
+                  </Text>
+                </View>
+
+                {/* Accuracy */}
+                {attendanceData.location && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Accuracy</Text>
+                    <Text style={styles.detailValue}>
+                      {formatAccuracy(attendanceData.location.accuracy)}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Check-out Time (if checked out) */}
+                {attendanceData.checkOutTime && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Check-out Time</Text>
+                    <Text style={styles.detailValue}>
+                      {formatTime(attendanceData.checkOutTime)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Success Message */}
+            {successMessage && (
+              <View style={styles.successContainer}>
+                <Text style={styles.successText}>{successMessage}</Text>
+              </View>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+
+            {/* Action Button */}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#1976d2" />
+                <Text style={styles.loadingText}>Processing...</Text>
+              </View>
+            ) : isCheckedIn ? (
+              <TouchableOpacity
+                style={[styles.button, styles.checkOutButton]}
+                onPress={onCheckOut}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.buttonText}>Check Out</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.button, styles.checkInButton]}
+                onPress={onCheckIn}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.buttonText}>Check In</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Info Text */}
+            <Text style={styles.infoText}>
+              {isCheckedIn
+                ? 'Your GPS location is automatically captured and recorded with your check-in. Tap the button above to record your check-out time.'
+                : 'Tap the button above to record your check-in time. Your GPS location will be automatically captured.'}
+            </Text>
           </View>
-
-          {/* Status Text */}
-          <Text style={styles.statusText}>
-            {isCheckedIn ? 'You are checked in' : 'You are not checked in'}
-          </Text>
-
-          {/* Success Message */}
-          {successMessage && (
-            <View style={styles.successContainer}>
-              <Text style={styles.successText}>{successMessage}</Text>
-            </View>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
-          {/* Action Button */}
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#1976d2" />
-              <Text style={styles.loadingText}>Processing...</Text>
-            </View>
-          ) : isCheckedIn ? (
-            <TouchableOpacity
-              style={[styles.button, styles.checkOutButton]}
-              onPress={onCheckOut}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.buttonText}>Check Out</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[styles.button, styles.checkInButton]}
-              onPress={onCheckIn}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.buttonText}>Check In</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Info Text */}
-          <Text style={styles.infoText}>
-            {isCheckedIn
-              ? 'Tap the button above to record your check-out time'
-              : 'Tap the button above to record your check-in time'}
-          </Text>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -103,6 +197,10 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   container: {
     flex: 1,
@@ -113,7 +211,7 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
     width: '100%',
-    maxWidth: 300,
+    maxWidth: 350,
   },
   statusIcon: {
     width: 100,
@@ -140,12 +238,44 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 24,
+    marginBottom: 20,
+  },
+  detailsContainer: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4caf50',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  detailLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    flex: 1,
+  },
+  detailValue: {
+    fontSize: 13,
+    color: '#333',
+    flex: 1.2,
+    textAlign: 'right',
+    fontFamily: 'monospace',
   },
   successContainer: {
     backgroundColor: '#e8f5e9',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 16,
     width: '100%',
@@ -159,7 +289,7 @@ const styles = StyleSheet.create({
   errorContainer: {
     backgroundColor: '#ffebee',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 16,
     width: '100%',
@@ -169,6 +299,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     fontWeight: '500',
+    lineHeight: 20,
   },
   loadingContainer: {
     alignItems: 'center',

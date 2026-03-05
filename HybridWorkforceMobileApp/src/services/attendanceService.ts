@@ -1,4 +1,5 @@
 import api from './api';
+import { getCurrentLocation, LocationData } from '../utils/locationService';
 
 // Types
 export interface Location {
@@ -11,6 +12,7 @@ export interface CheckInRequest {
   timestamp: string;
   location: Location;
   deviceId: string;
+  accuracy?: number;
 }
 
 export interface CheckOutRequest {
@@ -22,7 +24,13 @@ export interface AttendanceResponse {
   userId: string;
   checkInTime?: string;
   checkOutTime?: string;
+  location?: Location;
+  accuracy?: number;
   status: string;
+}
+
+export interface CheckInResult extends AttendanceResponse {
+  coordinates?: LocationData;
 }
 
 // ============================================================
@@ -30,49 +38,76 @@ export interface AttendanceResponse {
 // ============================================================
 const MOCK_ENABLED = true;
 
-let mockAttendanceState: AttendanceResponse | null = null;
+let mockAttendanceState: CheckInResult | null = null;
 
-const mockCheckIn = async (): Promise<AttendanceResponse> => {
+const mockCheckIn = async (
+  location: Location,
+  accuracy?: number
+): Promise<CheckInResult> => {
   await new Promise((resolve) => setTimeout(() => resolve(undefined), 500));
-  
-  mockAttendanceState = {
-    id: 'att-' + Date.now(),
-    userId: '1',
-    checkInTime: new Date().toISOString(),
-    status: 'CHECKED_IN',
+
+  const now = Date.now();
+  // create a LocationData object similar to what getCurrentLocation returns
+  const coords: LocationData = {
+    latitude: location.lat,
+    longitude: location.lng,
+    accuracy: accuracy || 0,
+    timestamp: now,
   };
-  
+
+  mockAttendanceState = {
+    id: 'att-' + now,
+    userId: '1',
+    checkInTime: new Date(now).toISOString(),
+    location,
+    accuracy,
+    status: 'CHECKED_IN',
+    coordinates: coords,
+  };
+
   return mockAttendanceState;
 };
 
 const mockCheckOut = async (): Promise<AttendanceResponse> => {
   await new Promise((resolve) => setTimeout(() => resolve(undefined), 500));
-  
+
   if (!mockAttendanceState) {
     throw new Error('Not checked in');
   }
-  
-  mockAttendanceState = {
+
+  const result: CheckInResult = {
     ...mockAttendanceState,
     checkOutTime: new Date().toISOString(),
     status: 'CHECKED_OUT',
   };
-  
-  return mockAttendanceState;
+
+  mockAttendanceState = null;
+  return result;
 };
 // ============================================================
 // END MOCK IMPLEMENTATION
 // ============================================================
 
 /**
- * Check in for attendance
+ * Check in for attendance with GPS location
+ * 
+ * Fetches current GPS coordinates and sends check-in request
  * POST /attendance/check-in
+ * 
+ * @throws LocationError - If GPS is unavailable or permission denied
+ * @throws AxiosError - If API request fails
  */
-export const checkIn = async (
-  location: Location = { lat: 0, lng: 0 }
-): Promise<AttendanceResponse> => {
+export const checkIn = async (): Promise<CheckInResult> => {
+  // Fetch current GPS coordinates
+  const locationData = await getCurrentLocation();
+
+  const location: Location = {
+    lat: locationData.latitude,
+    lng: locationData.longitude,
+  };
+
   if (MOCK_ENABLED) {
-    return mockCheckIn();
+    return mockCheckIn(location, locationData.accuracy);
   }
 
   const requestBody: CheckInRequest = {
@@ -80,13 +115,18 @@ export const checkIn = async (
     timestamp: new Date().toISOString(),
     location,
     deviceId: 'ANDROID-EMULATOR',
+    accuracy: locationData.accuracy,
   };
 
   const response = await api.post<AttendanceResponse>(
     '/attendance/check-in',
     requestBody
   );
-  return response.data;
+
+  return {
+    ...response.data,
+    coordinates: locationData,
+  };
 };
 
 /**

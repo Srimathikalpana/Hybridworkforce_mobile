@@ -5,10 +5,14 @@ import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import DashboardCard from '../components/common/DashboardCard';
 import AttendanceScreen from '../screens/AttendanceScreen';
+import StatusScreen from '../screens/StatusScreen';
+import LeaveScreen from '../screens/LeaveScreen';
 
 export type EmployeeStackParamList = {
   EmployeeHome: undefined;
   Attendance: undefined;
+  Status: undefined;
+  Leave: undefined;
 };
 
 const Stack = createNativeStackNavigator<EmployeeStackParamList>();
@@ -37,12 +41,12 @@ function EmployeeHomeScreen({ navigation }: EmployeeHomeProps) {
       <DashboardCard
         title="Update Status"
         description="Update your current work status"
-        onPress={() => {}}
+        onPress={() => navigation.navigate('Status')}
       />
       <DashboardCard
         title="Apply Leave"
         description="Submit a new leave request"
-        onPress={() => {}}
+        onPress={() => navigation.navigate('Leave')}
       />
       <DashboardCard
         title="My Attendance"
@@ -63,6 +67,22 @@ export default function EmployeeNavigator() {
         options={{
           headerShown: true,
           title: 'Attendance',
+        }}
+      />
+      <Stack.Screen
+        name="Status"
+        component={StatusScreen}
+        options={{
+          headerShown: true,
+          title: 'Update Status',
+        }}
+      />
+      <Stack.Screen
+        name="Leave"
+        component={LeaveScreen}
+        options={{
+          headerShown: true,
+          title: 'Apply Leave',
         }}
       />
     </Stack.Navigator>
