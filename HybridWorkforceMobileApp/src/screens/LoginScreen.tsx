@@ -13,14 +13,14 @@ import { useAuth } from '../context/AuthContext';
 
 const LoginScreen = () => {
   const { signIn } = useAuth();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
-      setError('Please enter username and password');
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter email and password');
       return;
     }
 
@@ -28,7 +28,7 @@ const LoginScreen = () => {
     setError(null);
 
     try {
-      const response = await login(username, password);
+      const response = await login(email, password);
       await signIn(response);
     } catch (err: any) {
       const errorMessage =
@@ -48,10 +48,11 @@ const LoginScreen = () => {
 
       <TextInput
         style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
         autoCapitalize="none"
+        keyboardType="email-address"
         editable={!loading}
       />
 

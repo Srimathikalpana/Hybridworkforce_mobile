@@ -1,8 +1,10 @@
 import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config/env';
 
-// Base URL for Android Emulator
-const BASE_URL = 'http://10.0.2.2:3000/api';
+// Base URL must be configured as http://<LOCAL_IP>:8080/api
+// In Expo, prefer setting `EXPO_PUBLIC_API_URL`.
+const BASE_URL = API_URL;
 
 // Create Axios instance
 const api: AxiosInstance = axios.create({

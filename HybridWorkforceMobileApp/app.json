@@ -1,4 +1,34 @@
 {
-  "name": "HybridWorkforceMobileApp",
+  "expo": {
+    "name": "HybridWorkforceMobileApp",
+    "slug": "hybridworkforcemobileapp",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "scheme": "hybridworkforce",
+    "assetBundlePatterns": ["**/*"],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.hybridworkforce.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.hybridworkforce.mobile"
+    },
+    "extra": {
+      "API_URL": "http://<LOCAL_IP>:8080/api"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  },
   "displayName": "HybridWorkforceMobileApp"
 }

@@ -53,6 +53,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const signOut = async () => {
+    // remove authentication token and reset context state
+    // **important**: we intentionally do NOT touch any attendance state or
+    // call checkOut here. Logging out should not trigger a checkout event.
     await clearToken();
     setUser(null);
     setStatus('unauthenticated');

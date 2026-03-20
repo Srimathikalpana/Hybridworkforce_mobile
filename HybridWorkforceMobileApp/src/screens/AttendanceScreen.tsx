@@ -53,8 +53,10 @@ export default function AttendanceScreen() {
     loading,
     error,
     attendanceData,
+    currentLocation,
     handleCheckIn,
     handleCheckOut,
+    refreshLocation,
   } = useAttendance();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -139,6 +141,35 @@ export default function AttendanceScreen() {
                     </Text>
                   </View>
                 )}
+              </View>
+            )}
+
+            {/* Current Location Display */}
+            {!isCheckedIn && (
+              <View style={styles.currentLocationContainer}>
+                <Text style={styles.currentLocationTitle}>Current Location</Text>
+
+                {currentLocation ? (
+                  <View style={styles.locationDetails}>
+                    <Text style={styles.locationText}>
+                      {formatCoordinates(currentLocation.latitude, currentLocation.longitude)}
+                    </Text>
+                    <Text style={styles.accuracyText}>
+                      Accuracy: {formatAccuracy(currentLocation.accuracy)}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.noLocationText}>Location not available</Text>
+                )}
+
+                <TouchableOpacity
+                  style={styles.refreshButton}
+                  onPress={refreshLocation}
+                  disabled={loading}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.refreshButtonText}>Refresh Location</Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -333,5 +364,52 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  currentLocationContainer: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#1976d2',
+  },
+  currentLocationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  locationDetails: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  locationText: {
+    fontSize: 13,
+    color: '#333',
+    fontFamily: 'monospace',
+    marginBottom: 8,
+  },
+  accuracyText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  noLocationText: {
+    fontSize: 13,
+    color: '#999',
+    marginBottom: 12,
+  },
+  refreshButton: {
+    width: '100%',
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#1976d2',
+    alignItems: 'center',
+  },
+  refreshButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

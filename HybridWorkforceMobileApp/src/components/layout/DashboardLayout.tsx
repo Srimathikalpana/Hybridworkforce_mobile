@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 
 interface DashboardLayoutProps {
   title: string;
@@ -23,9 +24,19 @@ export default function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   const { signOut } = useAuth();
+  const navigation = useNavigation();
 
   const handleLogout = async () => {
+    // clear authentication state only; attendance is unaffected
     await signOut();
+
+    // make sure the stack resets back to the login screen
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      })
+    );
   };
 
   return (
